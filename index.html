@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SFTP Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <button id="importSteBtn">STEファイルをインポート...</button>
+        
+        <div class="form-group">
+            <label>ホスト名</label>
+            <input type="text" id="host" placeholder="必須">
+        </div>
+
+        <div class="form-group">
+            <label>ユーザー名</label>
+            <input type="text" id="username" placeholder="必須">
+        </div>
+
+        <div class="form-group">
+            <label>パスワード</label>
+            <input type="text" id="password" placeholder="必須　手動で入力・ペーストしてください">
+        </div>
+
+        <div class="form-group">
+            <label>デフォルトパス</label>
+            <input type="text" id="remotePath" placeholder="任意">
+        </div>
+
+        <div class="form-group">
+            <label>サイトフォルダー</label>
+            <div class="input-with-button">
+                <input type="text" id="folderPath" readonly placeholder="必須">
+                <button id="selectFolderBtn">選択...</button>
+            </div>
+        </div>
+
+        <div class="form-group checkbox">
+            <input type="checkbox" id="uploadOnSave" checked>
+            <label for="uploadOnSave">ファイル保存時に自動でアップロード</label>
+        </div>
+
+        <div class="button-group">
+            <button id="generateBtn" class="primary-button">設定ファイルを生成</button>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html> 

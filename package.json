@@ -1,0 +1,63 @@
+{
+  "name": "sftp-gen",
+  "version": "1.1.0",
+  "description": "SFTP.json Generator for Cursor and VSCode",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac --universal",
+    "pack": "electron-builder --dir",
+    "dev": "electron . --debug",
+    "build:mac": "electron-builder --mac --universal",
+    "build:win": "electron-builder --win"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "electron": "^22.3.27",
+    "electron-builder": "^22.14.13",
+    "electron-notarize": "^1.2.2"
+  },
+  "build": {
+    "appId": "com.sftp.gen",
+    "productName": "SFTP Generator",
+    "artifactName": "${name}_${version}_${os}.${ext}",
+    "asar": false,
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "styles.css",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".",
+        "to": "app",
+        "filter": [
+          "main.js",
+          "preload.js",
+          "index.html",
+          "renderer.js",
+          "styles.css"
+        ]
+      }
+    ],
+    "mac": {
+      "target": ["zip"],
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "identity": "TOMIHIDE OTA"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}
