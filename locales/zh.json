@@ -1,0 +1,39 @@
+{
+  "title": "SFTP Generator",
+  "importSte": "导入STE文件...",
+  "host": {
+    "label": "主机名",
+    "placeholder": "必填"
+  },
+  "username": {
+    "label": "用户名",
+    "placeholder": "必填"
+  },
+  "password": {
+    "label": "密码",
+    "placeholder": "必填 - 请手动输入或粘贴"
+  },
+  "remotePath": {
+    "label": "默认路径",
+    "placeholder": "可选"
+  },
+  "folder": {
+    "label": "站点文件夹",
+    "placeholder": "必填",
+    "selectButton": "选择..."
+  },
+  "uploadOnSave": {
+    "label": "保存文件时自动上传"
+  },
+  "generate": {
+    "button": "生成配置文件",
+    "success": "配置文件已生成",
+    "error": "发生错误",
+    "missingRequired": "请填写所有必填项",
+    "successWithEditor": "生成成功。正在使用{editor}打开...",
+    "generateError": "生成配置文件失败: {error}"
+  },
+  "editor": {
+    "notFound": "未安装兼容的编辑器。"
+  }
+} 

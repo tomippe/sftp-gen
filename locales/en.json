@@ -1,0 +1,39 @@
+{
+  "title": "SFTP Generator",
+  "importSte": "Import STE File...",
+  "host": {
+    "label": "Hostname",
+    "placeholder": "Required"
+  },
+  "username": {
+    "label": "Username",
+    "placeholder": "Required"
+  },
+  "password": {
+    "label": "Password",
+    "placeholder": "Required - Please enter or paste manually"
+  },
+  "remotePath": {
+    "label": "Default Path",
+    "placeholder": "Optional"
+  },
+  "folder": {
+    "label": "Site Folder",
+    "placeholder": "Required",
+    "selectButton": "Select..."
+  },
+  "uploadOnSave": {
+    "label": "Upload automatically when file is saved"
+  },
+  "generate": {
+    "button": "Generate Config File",
+    "success": "Config file has been generated",
+    "error": "An error occurred",
+    "missingRequired": "Please fill in all required fields",
+    "successWithEditor": "Generation successful. Opening in {editor}...",
+    "generateError": "Failed to generate config file: {error}"
+  },
+  "editor": {
+    "notFound": "No compatible editor installed."
+  }
+} 

@@ -1,3 +1,7 @@
+:root {
+    accent-color: #9c00a2;
+    --accent-color: #9c00a2;
+}
 @media (prefers-color-scheme: light) {
     :root {
         --background: #f3f3f3;
@@ -39,7 +43,6 @@ body {
 .container {
     padding: 15px;
     width: 100%;
-    max-width: 470px;
     margin: 0 auto;
     box-sizing: border-box;
 }
@@ -67,7 +70,7 @@ body {
     width: 100%;
 }
 
-input[type="text"] {
+input[type="text"],input[type="password"] {
     width: 100%;
     padding: 6px 10px;
     border: 1px solid var(--border);
@@ -78,7 +81,7 @@ input[type="text"] {
     box-sizing: border-box;
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus,input[type="password"]:focus {
     outline: none;
     border-color: #007AFF;
     box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
@@ -86,7 +89,7 @@ input[type="text"]:focus {
 input:placeholder-shown {
     background: papayawhip;
 }
-input[type="text"]::placeholder {
+input[type="text"]::placeholder,input[type="password"]::placeholder {
     color: #aaa;
 }
 
@@ -113,17 +116,23 @@ button:active {
 }
 
 .primary-button {
-    background: #007AFF;
+    background-color: var(--accent-color);
     color: white;
-    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: opacity 0.2s;
 }
 
 .primary-button:hover {
-    background: #0066CC;
+    opacity: 0.9;
 }
 
-.primary-button:active {
-    background: #005AB5;
+.primary-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 #importSteBtn {
@@ -143,7 +152,6 @@ button:active {
     margin: 0;
     width: 14px;
     height: 14px;
-    accent-color: #007AFF;
 }
 
 .checkbox label {
@@ -226,4 +234,38 @@ button:active {
 
 .selected-path.visible {
     display: block;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    flex: 1;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password .icon {
+    width: 16px;
+    height: 16px;
+    stroke: #666;
+}
+
+.toggle-password:hover .icon {
+    stroke: #333;
 } 

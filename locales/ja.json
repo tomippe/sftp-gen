@@ -1,0 +1,39 @@
+{
+  "title": "SFTP Generator",
+  "importSte": "STEファイルをインポート...",
+  "host": {
+    "label": "ホスト名",
+    "placeholder": "必須"
+  },
+  "username": {
+    "label": "ユーザー名",
+    "placeholder": "必須"
+  },
+  "password": {
+    "label": "パスワード",
+    "placeholder": "必須　手動で入力・ペーストしてください"
+  },
+  "remotePath": {
+    "label": "デフォルトパス",
+    "placeholder": "任意"
+  },
+  "folder": {
+    "label": "サイトフォルダー",
+    "placeholder": "必須",
+    "selectButton": "選択..."
+  },
+  "uploadOnSave": {
+    "label": "ファイル保存時に自動でアップロード"
+  },
+  "generate": {
+    "button": "設定ファイルを生成",
+    "success": "設定ファイルを生成しました",
+    "error": "エラーが発生しました",
+    "missingRequired": "必須項目を入力してください",
+    "successWithEditor": "生成に成功しました。{editor}で開きます。",
+    "generateError": "設定ファイルの生成に失敗しました: {error}"
+  },
+  "editor": {
+    "notFound": "エディタがインストールされていません。"
+  }
+} 
