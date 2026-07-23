@@ -1,6 +1,8 @@
 :root {
     accent-color: #9c00a2;
     --accent-color: #9c00a2;
+    --accent-color-hover: #b418ba;
+    --accent-color-active: #850089;
 }
 @media (prefers-color-scheme: light) {
     :root {
@@ -105,11 +107,11 @@ button {
     transition: all 0.2s;
 }
 
-button:hover {
+button:not(.primary-button):hover {
     background-color: var(--button-hover);
 }
 
-button:active {
+button:not(.primary-button):active {
     transform: translateY(1px);
     box-shadow: none;
     background-color: var(--button-active);
@@ -117,16 +119,23 @@ button:active {
 
 .primary-button {
     background-color: var(--accent-color);
-    color: white;
+    color: #fff;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    transition: opacity 0.2s;
+    border-color: var(--accent-color);
+    transition: background-color 0.2s;
 }
 
-.primary-button:hover {
-    opacity: 0.9;
+.primary-button:hover:not(:disabled) {
+    background-color: var(--accent-color-hover);
+    color: #fff;
+}
+
+.primary-button:active:not(:disabled) {
+    background-color: var(--accent-color-active);
+    color: #fff;
 }
 
 .primary-button:disabled {

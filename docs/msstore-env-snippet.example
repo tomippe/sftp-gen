@@ -1,0 +1,8 @@
+# Microsoft Store — プロジェクト .env に追記（Partner Center でアプリ作成後）
+# 共通認証・署名 PFX: %USERPROFILE%\.msstore-env
+
+MS_STORE_PRODUCT_ID=
+MS_STORE_PACKAGE_NAME=StudioTomippe.SFTPGenerator
+MS_STORE_PUBLISHER_ID=CN=7AA9757D-D72F-4DE2-9980-F9A659207C27
+MS_STORE_PUBLISHER_DISPLAY_NAME=Studio Tomippe
+MS_STORE_PACKAGE_PATH=dist/signed/SFTPGenerator.appxbundle

@@ -1,0 +1,112 @@
+{
+  "name": "sftp-gen",
+  "productName": "SFTP Generator",
+  "version": "1.2.4",
+  "description": "VSCode/Cursorのsftp.jsonファイル生成ツール",
+  "main": "main.js",
+  "scripts": {
+    "build": "electron-builder",
+    "build:store:x64": "electron-builder --win appx --x64 --publish never",
+    "build:store:arm64": "electron-builder --win appx --arm64 --publish never"
+  },
+  "author": "Studio Tomippe",
+  "license": "MIT",
+  "dependencies": {
+    "electron-json-storage": "^4.6.0",
+    "electron-updater": "^6.8.3",
+    "fs-extra": "^11.2.0",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "electron": "22.3.27",
+    "electron-builder": "^22.14.13"
+  },
+  "build": {
+    "appId": "jp.tomippe.sftpgen",
+    "productName": "SFTP Generator",
+    "artifactName": "${name}_${os}.${ext}",
+    "asar": false,
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "styles.css",
+      "package.json",
+      "locales/**/*"
+    ],
+    "extraResources": [
+      {
+        "to": "app",
+        "filter": [
+          "main.js",
+          "preload.js",
+          "index.html",
+          "renderer.js",
+          "styles.css",
+          "locales/**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "fileAssociations": [
+      {
+        "ext": "ste",
+        "name": "Dreamweaver Site Settings",
+        "description": "Adobe Dreamweaver site definition (.ste)",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "appx",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "legalTrademarks": "SFTP Generator"
+    },
+    "appx": {
+      "identityName": "StudioTomippe.SFTPGenerator",
+      "publisher": "CN=7AA9757D-D72F-4DE2-9980-F9A659207C27",
+      "publisherDisplayName": "Studio Tomippe",
+      "applicationId": "App",
+      "displayName": "SFTP Generator",
+      "languages": [
+        "ja-JP",
+        "en-US",
+        "zh-CN"
+      ],
+      "setBuildNumber": false,
+      "showNameOnTiles": false
+    },
+    "buildVersion": "0",
+    "mac": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://apps.tomippe.jp/sftp-gen/"
+    },
+    "electronVersion": "22.3.27"
+  }
+}

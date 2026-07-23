@@ -9,7 +9,8 @@
     .\build.ps1 -Exe         # Build EXE only (skip zip/copy/upload)
 #>
 param(
-    [switch]$Exe
+    [switch]$Exe,
+    [switch]$Noverup
 )
 
 $ErrorActionPreference = "Stop"
@@ -110,10 +111,25 @@ Write-Ok "$distZipPath にコピーしました"
 Write-Step "FTP Upload"
 Send-FtpFile -LocalFile $distZipPath -RemotePath "sftp-gen/$ZIP_NAME"
 
+# manifest.json を更新してアップロード（win_version のみ更新、mac_version を保持）
+$manifestPath = Join-Path $DIST_DIR "manifest.json"
+$manifest = @{}
+if (Test-Path $manifestPath) {
+    $existing = Get-Content $manifestPath -Raw | ConvertFrom-Json
+    $existing.PSObject.Properties | ForEach-Object { $manifest[$_.Name] = $_.Value }
+}
+$manifest['name'] = 'SFTPGen'
+$manifest['win_version'] = $version
+if (-not $manifest.ContainsKey('version')) { $manifest['version'] = $version }
+$manifest | ConvertTo-Json -Compress | Set-Content -Path $manifestPath -Encoding UTF8 -NoNewline
+Send-FtpFile -LocalFile $manifestPath -RemotePath "sftp-gen/manifest.json"
+
 # ─── Save Next Version ───
 
-Write-Step "Version Update"
-Save-NextAppVersion -Version $version
+if (-not $Noverup) {
+    Write-Step "Version Update"
+    Save-NextAppVersion -Version $version
+}
 
 # ─── Summary ───
 
