@@ -1,7 +1,16 @@
 node_modules/
 dist/
+mac/dist/
 out/
 .webpack/
 *.zip
 .DS_Store
 .tmp/
+sftp.json
+.env
+windows/publish/*.appxbundle
+windows/publish/*.exe
+windows/dist/
+.!*!package.json
+mac/Sparkle.framework/
+mac/Sparkle_bin/
