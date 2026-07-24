@@ -144,9 +144,7 @@ function Inject-SteFta {
         return
     }
 
-    $prefix = if ($content -match 'uap3:') { 'uap3' } else { 'uap' }
-    if ($prefix -eq 'uap3') {
-        $fta = @"
+    $fta = @"
     <uap3:Extension Category="windows.fileTypeAssociation">
       <uap3:FileTypeAssociation Name="stesite">
         <uap:SupportedFileTypes>
@@ -156,18 +154,6 @@ function Inject-SteFta {
       </uap3:FileTypeAssociation>
     </uap3:Extension>
 "@
-    } else {
-        $fta = @"
-    <uap:Extension Category="windows.fileTypeAssociation">
-      <uap:FileTypeAssociation Name="stesite">
-        <uap:SupportedFileTypes>
-          <uap:FileType ContentType="application/octet-stream">.ste</uap:FileType>
-        </uap:SupportedFileTypes>
-        <uap:DisplayName>Dreamweaver Site Settings</uap:DisplayName>
-      </uap:FileTypeAssociation>
-    </uap:Extension>
-"@
-    }
 
     if ($content -match '<Extensions\s*/>') {
         $content = $content -replace '<Extensions\s*/>', ("<Extensions>`r`n" + $fta + "`r`n      </Extensions>")
@@ -179,9 +165,15 @@ function Inject-SteFta {
         throw "Cannot inject STE FTA in $ManifestPath"
     }
 
-    if ($prefix -eq 'uap3' -and $content -notmatch 'xmlns:uap3=') {
-        $content = $content -replace 'IgnorableNamespaces="([^"]*)"', 'IgnorableNamespaces="$1 uap3"'
-        $content = $content -replace '<Package\s', '<Package xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" '
+    if ($content -notmatch 'xmlns:uap3=') {
+        if ($content -match 'IgnorableNamespaces="([^"]*)"') {
+            if ($Matches[1] -notmatch 'uap3') {
+                $content = $content -replace 'IgnorableNamespaces="([^"]*)"', 'IgnorableNamespaces="$1 uap3"'
+            }
+        } elseif ($content -match '<Package\b') {
+            $content = $content -replace '(<Package\b[^>]*)(>)', '$1 IgnorableNamespaces="uap3"$2'
+        }
+        $content = $content -replace '(<Package\b)', '$1 xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"'
     }
 
     [System.IO.File]::WriteAllText($ManifestPath, $content, [System.Text.UTF8Encoding]::new($false))

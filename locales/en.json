@@ -29,7 +29,12 @@
     "button": "Generate Config File",
     "success": "Config file has been generated",
     "error": "An error occurred",
+    "dialogTitle": "SFTP Generator",
     "missingRequired": "Please fill in all required fields",
+    "invalidFolder": "The site folder path is invalid or the folder does not exist.",
+    "missingHost": "Please enter a hostname.",
+    "missingUsername": "Please enter a username.",
+    "writeFailed": "Could not write the config file: {error}",
     "successWithEditor": "Generation successful. Opening in {editor}...",
     "generateError": "Failed to generate config file: {error}"
   },

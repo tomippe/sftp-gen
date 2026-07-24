@@ -29,7 +29,12 @@
     "button": "生成配置文件",
     "success": "配置文件已生成",
     "error": "发生错误",
+    "dialogTitle": "SFTP Generator",
     "missingRequired": "请填写所有必填项",
+    "invalidFolder": "站点文件夹路径无效或文件夹不存在。",
+    "missingHost": "请输入主机名。",
+    "missingUsername": "请输入用户名。",
+    "writeFailed": "无法写入配置文件: {error}",
     "successWithEditor": "生成成功。正在使用{editor}打开...",
     "generateError": "生成配置文件失败: {error}"
   },

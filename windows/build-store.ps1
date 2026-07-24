@@ -17,13 +17,14 @@ Set-StrictMode -Version Latest
 
 $rootDir = Resolve-Path (Join-Path $PSScriptRoot '..')
 $scriptsDir = Join-Path $PSScriptRoot 'scripts'
+$versionFile = Join-Path $PSScriptRoot 'version.txt'
 
 . (Join-Path $rootDir '..\build-common\helpers.ps1')
 . (Join-Path $rootDir '..\build-common\version.ps1')
 . (Join-Path $scriptsDir '_msstore-env.ps1')
 
 Write-Step 'Version'
-$version = Read-AppVersion -VersionFile (Join-Path $rootDir 'version.txt')
+$version = Read-AppVersion -VersionFile $versionFile
 Write-Ok "v$version"
 
 $pkgJsonPath = Join-Path $rootDir 'package.json'
@@ -108,7 +109,7 @@ if (Test-Path $listingScript) {
 
 if (-not $Noverup) {
     Write-Step 'Version Update'
-    Save-NextAppVersion -Version $version -VersionFile (Join-Path $rootDir 'version.txt')
+    Save-NextAppVersion -Version $version -VersionFile $versionFile
 }
 
 Write-Step "Store build complete v$version"
@@ -117,8 +118,14 @@ New-Item -ItemType Directory -Path $publishDir -Force | Out-Null
 Copy-Item -LiteralPath $bundlePath -Destination (Join-Path $publishDir 'SFTPGenerator.appxbundle') -Force
 if (Test-Path $outCsv) { Copy-Item -LiteralPath $outCsv -Destination (Join-Path $publishDir 'listingData.csv') -Force }
 Write-Host ''
-Write-Host '  Partner Center upload:' -ForegroundColor Gray
+Write-Host "  Partner Center upload:" -ForegroundColor Gray
 Write-Host "  $bundlePath" -ForegroundColor White
 Write-Host "  (copy) $publishDir\SFTPGenerator.appxbundle" -ForegroundColor Gray
+$exePath = Join-Path $rootDir 'dist\win-unpacked\SFTP Generator.exe'
+if (Test-Path -LiteralPath $exePath) {
+    Copy-Item -LiteralPath $exePath -Destination (Join-Path $publishDir 'SFTP Generator.exe') -Force
+    Write-Host "  EXE (x64 unpacked): $exePath" -ForegroundColor Gray
+    Write-Host "  (copy) $publishDir\SFTP Generator.exe" -ForegroundColor Gray
+}
 Write-Host '  Listing: docs/store-metadata.md , windows/publish/listingData.csv' -ForegroundColor Gray
 Write-Host ''

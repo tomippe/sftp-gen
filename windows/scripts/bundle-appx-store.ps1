@@ -9,7 +9,7 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_sdk-tools.ps1"
 
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
-$versionFile = Join-Path $projectRoot 'version.txt'
+$versionFile = Join-Path $projectRoot 'windows\version.txt'
 
 if (-not $OutputDir) {
     $OutputDir = Join-Path $projectRoot 'dist\signed'

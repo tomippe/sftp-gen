@@ -1,0 +1,24 @@
+# Windows 専用 electron-builder 設定（Mac 用 `mac/` フォルダは使わない）
+directories:
+  buildResources: windows/resources
+win:
+  target:
+    - target: appx
+      arch:
+        - x64
+        - arm64
+  icon: icon.ico
+  legalTrademarks: SFTP Generator
+appx:
+  identityName: StudioTomippe.SFTPGenerator
+  publisher: CN=7AA9757D-D72F-4DE2-9980-F9A659207C27
+  publisherDisplayName: Studio Tomippe
+  applicationId: App
+  displayName: SFTP Generator
+  languages:
+    - ja-JP
+    - en-US
+    - zh-CN
+  setBuildNumber: false
+  showNameOnTiles: false
+buildVersion: "0"

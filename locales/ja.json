@@ -29,7 +29,12 @@
     "button": "設定ファイルを生成",
     "success": "設定ファイルを生成しました",
     "error": "エラーが発生しました",
+    "dialogTitle": "SFTP Generator",
     "missingRequired": "必須項目を入力してください",
+    "invalidFolder": "サイトフォルダーのパスが正しくないか、フォルダーが存在しません。",
+    "missingHost": "ホスト名を入力してください。",
+    "missingUsername": "ユーザー名を入力してください。",
+    "writeFailed": "設定ファイルを書き込めません: {error}",
     "successWithEditor": "生成に成功しました。{editor}で開きます。",
     "generateError": "設定ファイルの生成に失敗しました: {error}"
   },

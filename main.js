@@ -1,11 +1,12 @@
-const { app, BrowserWindow, ipcMain, dialog, clipboard, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, clipboard } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
-const { promisify } = require('util');
 const { exec, spawn } = require('child_process');
 const xml2js = require('xml2js');
 const { shell } = require('electron');
+const { setupApplicationMenu } = require('./mac-app-menu');
+const { setupWindowsApplicationMenu } = require('./win-app-menu');
 
 console.log('Application starting...');
 console.log('Current directory:', __dirname);
@@ -59,7 +60,7 @@ function createWindow() {
             height: 560,
             resizable: false,
             show: false,
-            autoHideMenuBar: true,
+            autoHideMenuBar: process.platform !== 'win32',
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
@@ -82,7 +83,6 @@ function createWindow() {
 
         mainWindow.on('closed', () => {
             mainWindow = null;
-            app.quit();
         });
     } catch (error) {
         console.error('Error creating window:', error);
@@ -163,6 +163,21 @@ app.on('open-file', (event, filePath) => {
 
 app.whenReady().then(() => {
     registerWindowsSteAssociation();
+
+    autoUpdater.autoDownload = true;
+    autoUpdater.on('error', (error) => {
+        console.error('Auto-update error:', error);
+    });
+
+    setupApplicationMenu({
+        getMainWindow: () => mainWindow,
+        checkForUpdates: () => autoUpdater.checkForUpdatesAndNotify()
+    });
+    setupWindowsApplicationMenu({
+        getMainWindow: () => mainWindow,
+        checkForUpdates: () => autoUpdater.checkForUpdatesAndNotify()
+    });
+
     createWindow();
 
     if (pendingOpenFilePath) {
@@ -448,42 +463,109 @@ ipcMain.handle('openInEditor', async (event, folderPath, checkOnly = false) => {
     return await openInEditor(folderPath, checkOnly);
 });
 
-ipcMain.handle('generate-sftp-json', async (event, { folderPath, config }) => {
-    const vscodePath = path.join(folderPath, '.vscode');
-    const sftpJsonPath = path.join(vscodePath, 'sftp.json');
+let mainI18nCache = null;
 
-    if (!fs.existsSync(vscodePath)) {
-        fs.mkdirSync(vscodePath);
-    }
-
-    const sftpConfig = {
-        name: "My Server",
-        host: config.host,
-        protocol: "ftp",
-        port: 21,
-        passive: true,
-        username: config.username,
-        password: config.password,
-        remotePath: config.remotePath,
-        uploadOnSave: true,
-        watcher: {
-            files: "{**/*.css}",
-            autoUpload: true,
-            autoDelete: false
-        },
-        ignore: [
-            "**/.vscode",
-            "**/.git/**",
-            "**/.DS_Store"
-        ],
-        syncOption: {
-            delete: true
+function getMainI18n() {
+    if (mainI18nCache) return mainI18nCache;
+    const locale = app.getLocale();
+    let lang = 'en';
+    if (locale.startsWith('ja')) lang = 'ja';
+    else if (locale.startsWith('zh')) lang = 'zh';
+    const candidates = [
+        path.join(__dirname, 'locales', `${lang}.json`),
+        path.join(getAppPath(), 'locales', `${lang}.json`),
+        path.join(__dirname, 'locales', 'en.json'),
+        path.join(getAppPath(), 'locales', 'en.json')
+    ];
+    for (const filePath of candidates) {
+        try {
+            mainI18nCache = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            return mainI18nCache;
+        } catch {
+            // try next
         }
+    }
+    mainI18nCache = { generate: { dialogTitle: 'SFTP Generator' } };
+    return mainI18nCache;
+}
+
+function showGenerateError(message) {
+    const i18n = getMainI18n();
+    dialog.showErrorBox(i18n.generate?.dialogTitle || 'SFTP Generator', message);
+}
+
+ipcMain.handle('generate-sftp-json', async (event, { folderPath, config }) => {
+    const i18n = getMainI18n();
+    const g = i18n.generate || {};
+
+    const fail = (message) => {
+        showGenerateError(message);
+        return { success: false, error: message };
     };
 
-    fs.writeFileSync(sftpJsonPath, JSON.stringify(sftpConfig, null, 4));
-    
-    return true;
+    const folder = (folderPath || '').trim();
+    if (!folder) {
+        return fail(g.missingRequired || 'Required fields are missing.');
+    }
+
+    let stat;
+    try {
+        stat = fs.statSync(folder);
+    } catch {
+        return fail(g.invalidFolder || 'Invalid folder path.');
+    }
+    if (!stat.isDirectory()) {
+        return fail(g.invalidFolder || 'Invalid folder path.');
+    }
+
+    if (!config?.host?.trim()) {
+        return fail(g.missingHost || g.missingRequired || 'Hostname is required.');
+    }
+    if (!config?.username?.trim()) {
+        return fail(g.missingUsername || g.missingRequired || 'Username is required.');
+    }
+
+    const vscodePath = path.join(folder, '.vscode');
+    const sftpJsonPath = path.join(vscodePath, 'sftp.json');
+
+    try {
+        if (!fs.existsSync(vscodePath)) {
+            fs.mkdirSync(vscodePath, { recursive: true });
+        }
+
+        const sftpConfig = {
+            name: "My Server",
+            host: config.host.trim(),
+            protocol: "ftp",
+            port: 21,
+            passive: true,
+            username: config.username.trim(),
+            password: config.password || '',
+            remotePath: config.remotePath || '',
+            uploadOnSave: config.uploadOnSave !== false,
+            watcher: {
+                files: "{**/*.css}",
+                autoUpload: true,
+                autoDelete: false
+            },
+            ignore: [
+                "**/.vscode",
+                "**/.git/**",
+                "**/.DS_Store"
+            ],
+            syncOption: {
+                delete: true
+            }
+        };
+
+        fs.writeFileSync(sftpJsonPath, JSON.stringify(sftpConfig, null, 4), 'utf8');
+        return { success: true, path: sftpJsonPath };
+    } catch (error) {
+        console.error('generate-sftp-json error:', error);
+        const message = (g.writeFailed || g.generateError || 'Failed: {error}')
+            .replace('{error}', error.message);
+        return fail(message);
+    }
 });
 
 // システムロケールを取得するハンドラー

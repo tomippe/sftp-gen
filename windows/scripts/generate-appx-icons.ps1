@@ -1,6 +1,7 @@
 #Requires -Version 5.1
 <#
-  build/icon.png から electron-builder APPX 用タイルを生成する。
+  windows/resources/icon.png から electron-builder APPX 用タイルを生成する。
+  Mac 用 mac/ フォルダは触らない。
 #>
 param(
     [string]$SourcePng = "",
@@ -11,13 +12,13 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 
 if (-not $SourcePng) {
-    $SourcePng = Join-Path $projectRoot 'build\icon.png'
+    $SourcePng = Join-Path $projectRoot 'windows\resources\icon.png'
 }
 if (-not (Test-Path -LiteralPath $SourcePng)) {
     throw "Icon not found: $SourcePng"
 }
 if (-not $OutDir) {
-    $OutDir = Join-Path $projectRoot 'build\appx'
+    $OutDir = Join-Path $projectRoot 'windows\resources'
 }
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 

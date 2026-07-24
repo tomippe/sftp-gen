@@ -166,13 +166,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             };
 
-            await window.electronAPI.generateSftpJson(config);
-            
-            // まずエディタ名を取得（checkOnly = true）
+            const result = await window.electronAPI.generateSftpJson(config);
+            if (!result?.success) {
+                if (result?.error) {
+                    statusMessage.textContent = i18n.generate.generateError.replace('{error}', result.error);
+                }
+                return;
+            }
+
             const editor = await window.electronAPI.openInEditor(config.folderPath, true);
             statusMessage.textContent = i18n.generate.successWithEditor.replace('{editor}', editor);
-            
-            // 1秒後に実際にエディタを開く（checkOnly = false）
+
             setTimeout(async () => {
                 await window.electronAPI.openInEditor(config.folderPath, false);
             }, 1000);

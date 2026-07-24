@@ -12,14 +12,17 @@ alwaysApply: true
 
 - **種別**: Electron アプリ（Mac 直接配布 + Windows Store）
 - **Mac ビルド**: `npm run build -- --mac --universal`（electron-builder）
-- **Mac 配布**: Developer ID 署名 → `mac_create_dist_zip` → 公証 → ステープル → 再 ZIP → `verify-mac-distribution-post.sh`（build-common 共通）
+- **Mac 配布**: electron-builder 署名 → DMG（`mac_create_dist_dmg_layout`）→ 公証 → ステープル → `verify-mac-distribution-post.sh`（DMG）
+- **更新**: electron-updater（`latest-mac.yml` + DMG）。appcast.xml は build.sh が Sparkle 互換で生成（アプリ本体は electron-updater）
+- Mac 成果物: `mac/dist/`（`.app` / DMG / `latest-mac.yml`）
 - **Windows Store**: `.\windows\build-store.ps1` → `dist/signed/SFTPGenerator.appxbundle`
 
 ## 固有設定
 
-- Mac ZIP: `sftp-gen_mac.zip`
-- Windows ポータブル ZIP: `build.ps1` → `sftp-gen_win.zip`
+- Mac DMG: `mac/dist/sftp-gen_mac.dmg`
+- **Windows ポータブル**: `build.ps1` → `dist/win-unpacked/SFTP Generator.exe` → `sftp-gen_win.zip`
+- **Windows 版番号**: `windows/version.txt`（Mac ルート `version.txt` とは別）
 - ビルド前にキャッシュ全削除 + `npm install --force`
-- アイコン: `build/icon.png` から `iconutil` で `.icns` 生成
-- ビルド成果物: `dist/`
+- Mac アイコン: `mac/icon.png` から `iconutil` で `mac/icon.icns` 生成
+- Windows アイコン: `windows/resources/`（Mac 用 `mac/` とは別）
 - Store 掲載文言: `docs/store-metadata.md`

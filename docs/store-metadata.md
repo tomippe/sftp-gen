@@ -52,7 +52,7 @@ Store ID
 
 （Partner Center でアプリ作成後に .env の MS_STORE_PRODUCT_ID を設定）
 
-Identity Version の第 4 桁は常に 0（例: version.txt が 1.2.4 なら 1.2.4.0）
+Identity Version の第 4 桁は常に 0（例: windows/version.txt が 1.3.0 なら 1.3.0.0）
 
 提出パッケージ
 
@@ -201,7 +201,7 @@ Privacy policy: https://apps.tomippe.jp/sftp-gen/policy/
 
 - [ ] Partner Center で Package Identity Name `StudioTomippe.SFTPGenerator` を予約済み
 - [ ] `.env` に MS_STORE_PRODUCT_ID を設定
-- [ ] version.txt / APPX Identity Version（X.Y.Z.0）一致
+- [ ] windows/version.txt / APPX Identity Version（X.Y.Z.0）一致
 - [ ] `dist/signed/SFTPGenerator.appxbundle` を提出
 - [ ] `dist/listingData-*.csv` または本ファイルの文言を Partner Center に反映
 - [ ] プライバシーポリシー URL を Partner Center と apps.tomippe.jp に設定
