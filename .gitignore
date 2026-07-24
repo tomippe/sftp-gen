@@ -1,6 +1,5 @@
 node_modules/
-dist/
-mac/dist/
+mac/build/
 out/
 .webpack/
 *.zip
@@ -8,9 +7,9 @@ out/
 .tmp/
 sftp.json
 .env
-windows/publish/*.appxbundle
-windows/publish/*.exe
-windows/dist/
+windows/build/*.appxbundle
+windows/build/*.exe
+windows/build/
 windows/work/
 .!*!package.json
 mac/Sparkle.framework/

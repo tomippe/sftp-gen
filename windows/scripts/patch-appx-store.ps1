@@ -19,11 +19,12 @@ $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $versionFile = Join-Path $projectRoot 'windows\version.txt'
 
 if (-not $OutputDir) {
-    $OutputDir = Join-Path $projectRoot 'dist\store'
+    $OutputDir = Join-Path $projectRoot 'windows\build\store'
 }
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
 Load-MsStoreEnv -ProjectRoot $projectRoot
+$packageDescription = Get-SftpgenPackageDescription -ProjectRoot $projectRoot
 
 if ($AppxVersion) {
     if ($AppxVersion -notmatch '\.0$') {
@@ -37,7 +38,7 @@ if ($AppxVersion) {
 Write-Host "APPX Identity Version: $identityVersion"
 
 $makeAppx = Find-SdkTool -ToolName 'makeappx'
-$work = Join-Path $projectRoot ('windows\work\patch-' + [guid]::NewGuid().ToString('N'))
+$work = New-SftpgenWorkDirectory -Prefix 'patch'
 $extractDir = Join-Path $work 'content'
 New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
 
@@ -52,6 +53,7 @@ try {
         Set-AppxManifestVersion -ManifestPath $m.FullName -Version $identityVersion
         Set-AppxManifestDependencies -ManifestPath $m.FullName
         Set-AppxManifestAllowExternalContent -ManifestPath $m.FullName
+        Set-AppxManifestDescriptions -ManifestPath $m.FullName -Description $packageDescription
         Inject-SteFta -ManifestPath $m.FullName
     }
 

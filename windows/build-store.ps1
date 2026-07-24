@@ -37,12 +37,8 @@ Write-Step 'APPX icons'
 if (-not $?) { throw 'generate-appx-icons.ps1 failed' }
 
 Write-Step 'Clean & Install'
-$distPath = Join-Path $rootDir 'dist'
-foreach ($sub in @('win-unpacked', 'store', 'signed', '*.appx', '*.appxbundle')) {
-    Get-ChildItem -Path $distPath -Filter $sub -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-}
-Get-ChildItem -Path $distPath -Filter '*.appx' -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-Get-ChildItem -Path $distPath -Filter '*.appxbundle' -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+& (Join-Path $scriptsDir 'clean-store-artifacts.ps1') -Mode All
+if (-not $?) { throw 'clean-store-artifacts.ps1 failed' }
 foreach ($d in @('out', '.webpack')) {
     $p = Join-Path $rootDir $d
     if (Test-Path $p) { Remove-Item -Recurse -Force $p -ErrorAction SilentlyContinue }
@@ -57,19 +53,19 @@ $patched = @()
 
 foreach ($cpuArch in $archs) {
     Write-Step "electron-builder appx ($cpuArch)"
+    Get-ChildItem -LiteralPath (Join-Path $rootDir 'windows\build') -Filter '*.appx' -File -ErrorAction SilentlyContinue |
+        Remove-Item -Force -ErrorAction SilentlyContinue
     & (Join-Path $scriptsDir 'electron-builder-local.ps1') -ProjectDir $rootDir -Arch $cpuArch
     if (-not $?) { throw "electron-builder failed ($cpuArch)" }
 
-    $rawAppx = Get-ChildItem -LiteralPath (Join-Path $rootDir 'dist') -Filter '*.appx' -File |
-        Where-Object { $_.Name -match "-$cpuArch\.appx$" } |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-    if (-not $rawAppx) {
-        $rawAppx = Get-ChildItem -LiteralPath (Join-Path $rootDir 'dist') -Filter '*.appx' -File |
-            Sort-Object LastWriteTime -Descending |
-            Select-Object -First 1
+    $rawCandidates = @(Get-ChildItem -LiteralPath (Join-Path $rootDir 'windows\build') -Filter '*.appx' -File)
+    if ($rawCandidates.Count -eq 0) { throw "No .appx in windows/build ($cpuArch)" }
+    $rawAppx = if ($cpuArch -eq 'arm64') {
+        $rawCandidates | Where-Object { $_.Name -match 'arm64\.appx$' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    } else {
+        $rawCandidates | Where-Object { $_.Name -notmatch 'arm64\.appx$' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     }
-    if (-not $rawAppx) { throw "No .appx in dist ($cpuArch)" }
+    if (-not $rawAppx) { throw "No .appx in windows/build ($cpuArch)" }
 
     Write-Step "Patch & sign ($cpuArch)"
     $leaf = "SFTPGenerator-$cpuArch.appx"
@@ -77,10 +73,13 @@ foreach ($cpuArch in $archs) {
         -InputAppx $rawAppx.FullName `
         -OutputAppxName $leaf
     if (-not $?) { throw "patch-appx-store.ps1 failed ($cpuArch)" }
-    $patched += Join-Path $rootDir "dist\store\$leaf"
+    $patched += Join-Path $rootDir "windows\build\store\$leaf"
 }
 
 if ($AppOnly) {
+    Write-Step 'Trim work dirs'
+    & (Join-Path $scriptsDir 'clean-store-artifacts.ps1') -Mode WorkOnly
+    if (-not $?) { throw 'clean-store-artifacts.ps1 failed' }
     Write-Step "Build complete (AppOnly) v$version"
     exit 0
 }
@@ -89,19 +88,19 @@ Write-Step 'Bundle'
 & (Join-Path $scriptsDir 'bundle-appx-store.ps1') -InputAppxs $patched
 if (-not $?) { throw 'bundle-appx-store.ps1 failed' }
 
-$bundlePath = Join-Path $rootDir 'dist\signed\SFTPGenerator.appxbundle'
+$bundlePath = Join-Path $rootDir 'windows\build\signed\SFTPGenerator.appxbundle'
 $pfx = Resolve-MsStoreSigningPfx -ProjectRoot $rootDir
 if ($pfx) { $env:MS_STORE_SIGNING_PFX = $pfx }
 Sign-StorePackage -PackagePath $bundlePath
 
 Write-Step 'Listing CSV'
 $listingScript = Join-Path $scriptsDir 'generate-listing-csv.py'
-$outCsv = Join-Path $rootDir 'dist\listingData.csv'
+$outCsv = Join-Path $rootDir 'windows\build\listingData.csv'
 if (Test-Path $listingScript) {
     $metaPath = Join-Path $rootDir 'docs\store-metadata.md'
     $templatePath = Join-Path $scriptsDir 'listing-csv-template.csv'
     if ($env:MS_STORE_PRODUCT_ID) {
-        $outCsv = Join-Path $rootDir "dist\listingData-$($env:MS_STORE_PRODUCT_ID).csv"
+        $outCsv = Join-Path $rootDir "windows\build\listingData-$($env:MS_STORE_PRODUCT_ID).csv"
     }
     python $listingScript --metadata $metaPath --template $templatePath -o $outCsv
     if ($LASTEXITCODE -eq 0) { Write-Ok $outCsv }
@@ -112,20 +111,16 @@ if (-not $Noverup) {
     Save-NextAppVersion -Version $version -VersionFile $versionFile
 }
 
+Write-Step 'Trim intermediates'
+& (Join-Path $scriptsDir 'clean-store-artifacts.ps1') -Mode Intermediates
+if (-not $?) { throw 'clean-store-artifacts.ps1 failed' }
+
 Write-Step "Store build complete v$version"
-$publishDir = Join-Path $PSScriptRoot 'publish'
-New-Item -ItemType Directory -Path $publishDir -Force | Out-Null
-Copy-Item -LiteralPath $bundlePath -Destination (Join-Path $publishDir 'SFTPGenerator.appxbundle') -Force
-if (Test-Path $outCsv) { Copy-Item -LiteralPath $outCsv -Destination (Join-Path $publishDir 'listingData.csv') -Force }
 Write-Host ''
 Write-Host "  Partner Center upload:" -ForegroundColor Gray
 Write-Host "  $bundlePath" -ForegroundColor White
-Write-Host "  (copy) $publishDir\SFTPGenerator.appxbundle" -ForegroundColor Gray
-$exePath = Join-Path $rootDir 'dist\win-unpacked\SFTP Generator.exe'
-if (Test-Path -LiteralPath $exePath) {
-    Copy-Item -LiteralPath $exePath -Destination (Join-Path $publishDir 'SFTP Generator.exe') -Force
-    Write-Host "  EXE (x64 unpacked): $exePath" -ForegroundColor Gray
-    Write-Host "  (copy) $publishDir\SFTP Generator.exe" -ForegroundColor Gray
+if (Test-Path $outCsv) {
+    Write-Host "  Listing CSV: $outCsv" -ForegroundColor Gray
 }
-Write-Host '  Listing: docs/store-metadata.md , windows/publish/listingData.csv' -ForegroundColor Gray
+Write-Host '  Listing text: docs/store-metadata.md' -ForegroundColor Gray
 Write-Host ''

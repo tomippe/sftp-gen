@@ -6,7 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-MAC_BUILD_DIR="mac/dist"
+MAC_BUILD_DIR="mac/build"
 APP_NAME="sftp-gen"
 DMG_NAME="${APP_NAME}_mac.dmg"
 ZIP_NAME="${APP_NAME}_mac.zip"

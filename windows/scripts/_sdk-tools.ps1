@@ -1,5 +1,13 @@
 #Requires -Version 5.1
 
+function New-SftpgenWorkDirectory {
+    param([Parameter(Mandatory = $true)][string]$Prefix)
+    $root = Join-Path $env:LOCALAPPDATA 'sftpgen-work'
+    $dir = Join-Path $root ($Prefix + '-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    return $dir
+}
+
 function Find-SdkTool {
     param([Parameter(Mandatory = $true)][string]$ToolName)
 
@@ -133,6 +141,32 @@ function Test-ManifestHasSteFta {
     param([string]$ManifestContent)
     return ($ManifestContent -match 'FileTypeAssociation[^>]*Name="stesite"') -or
         ($ManifestContent -match '<uap:FileType>\.ste</uap:FileType>')
+}
+
+function Get-SftpgenPackageDescription {
+    param([Parameter(Mandatory = $true)][string]$ProjectRoot)
+    $pkgPath = Join-Path $ProjectRoot 'package.json'
+    if (-not (Test-Path -LiteralPath $pkgPath)) {
+        throw "package.json not found: $pkgPath"
+    }
+    $json = Get-Content -LiteralPath $pkgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    return [string]$json.description
+}
+
+function Set-AppxManifestDescriptions {
+    param(
+        [Parameter(Mandatory = $true)][string]$ManifestPath,
+        [Parameter(Mandatory = $true)][string]$Description
+    )
+    if (-not $Description) { return }
+    $text = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8
+    $escaped = [System.Security.SecurityElement]::Escape($Description)
+    $updated = [regex]::Replace($text, '(<Description>)[^<]*(</Description>)', "`${1}$escaped`${2}")
+    $updated = [regex]::Replace($updated, '(<uap:VisualElements\b[^>]*\bDescription=")[^"]*(")', "`${1}$escaped`${2}")
+    if ($updated -ne $text) {
+        [System.IO.File]::WriteAllText($ManifestPath, $updated, [System.Text.UTF8Encoding]::new($false))
+        Write-Host "  Normalized manifest descriptions"
+    }
 }
 
 function Inject-SteFta {

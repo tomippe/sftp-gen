@@ -56,15 +56,11 @@ Identity Version の第 4 桁は常に 0（例: windows/version.txt が 1.3.0 �
 
 提出パッケージ
 
-dist/signed/SFTPGenerator.appxbundle
-
-ビルド後のコピー（エクスプローラー用）
-
-windows/publish/SFTPGenerator.appxbundle
+windows/build/signed/SFTPGenerator.appxbundle
 
 Partner Center リスト CSV（generate-listing-csv.py 生成）
 
-windows/publish/listingData.csv
+windows/build/listingData-*.csv
 
 ---
 
@@ -202,8 +198,8 @@ Privacy policy: https://apps.tomippe.jp/sftp-gen/policy/
 - [ ] Partner Center で Package Identity Name `StudioTomippe.SFTPGenerator` を予約済み
 - [ ] `.env` に MS_STORE_PRODUCT_ID を設定
 - [ ] windows/version.txt / APPX Identity Version（X.Y.Z.0）一致
-- [ ] `dist/signed/SFTPGenerator.appxbundle` を提出
-- [ ] `dist/listingData-*.csv` または本ファイルの文言を Partner Center に反映
+- [ ] `windows/build/signed/SFTPGenerator.appxbundle` を提出
+- [ ] `windows/build/listingData-*.csv` または本ファイルの文言を Partner Center に反映
 - [ ] プライバシーポリシー URL を Partner Center と apps.tomippe.jp に設定
 - [ ] runFullTrust を申告（理由は上記英語文）
 - [ ] .ste ダブルクリック動作を実機確認

@@ -7,7 +7,7 @@ cd Y:\Cursor\sftp-gen
 .\windows\build-store.ps1
 ```
 
-提出物: [dist/signed/SFTPGenerator.appxbundle](file:///Y:/Cursor/sftp-gen/dist/signed/SFTPGenerator.appxbundle)
+提出物: [windows/build/signed/SFTPGenerator.appxbundle](file:///Y:/Cursor/sftp-gen/windows/build/signed/SFTPGenerator.appxbundle)
 
 Win 用アイコン・APPX タイルは **`windows/resources/`**（Mac 用 `mac/` は使いません）。
 
@@ -15,11 +15,7 @@ Win 版番号の正本: **`windows/version.txt`**（Mac ルート `version.txt` 
 
 ポータブル EXE（`build.ps1`）:
 
-dist/win-unpacked/SFTP Generator.exe
-
-Store ビルド後の EXE コピー:
-
-windows/publish/SFTP Generator.exe
+windows/build/win-unpacked/SFTP Generator.exe
 
 Partner Center へのパッケージアップロードは手動。掲載文言の正本は [docs/store-metadata.md](store-metadata.md)。
 

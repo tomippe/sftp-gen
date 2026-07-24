@@ -42,7 +42,7 @@
       "mac/AppsLogo.png"
     ],
     "directories": {
-      "output": "mac/dist",
+      "output": "mac/build",
       "buildResources": "mac"
     },
     "fileAssociations": [

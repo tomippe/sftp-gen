@@ -1,6 +1,9 @@
 # Windows 専用 electron-builder 設定（Mac 用 `mac/` フォルダは使わない）
+# .ste FTA は patch-appx-store.ps1 で uap3 注入（electron-builder の fileAssociations は makeappx 失敗の原因）
+fileAssociations: []
 directories:
   buildResources: windows/resources
+  output: windows/build
 win:
   target:
     - target: appx

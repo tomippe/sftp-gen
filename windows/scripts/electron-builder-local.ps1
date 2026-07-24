@@ -37,15 +37,18 @@ Write-Host "  from: $ProjectDir"
 Write-Host "  stage: $localRoot"
 
 Remove-Item -LiteralPath $localRoot -Recurse -Force -ErrorAction SilentlyContinue
+if (Test-Path -LiteralPath $localRoot) {
+    $localRoot = Join-Path $env:LOCALAPPDATA ('sftpgen-electron-build-' + [guid]::NewGuid().ToString('N'))
+}
 New-Item -ItemType Directory -Path $localRoot -Force | Out-Null
 
-robocopy $ProjectDir $localRoot /MIR /XD dist node_modules windows\work /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
-if ($LASTEXITCODE -ge 8) { throw "robocopy project -> local failed ($LASTEXITCODE)" }
+robocopy $ProjectDir $localRoot /E /XD windows\build mac\build node_modules windows\work .git /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
+if ($LASTEXITCODE -ge 16) { throw "robocopy project -> local failed ($LASTEXITCODE)" }
 
 $nodeModules = Join-Path $ProjectDir 'node_modules'
 if (Test-Path -LiteralPath $nodeModules) {
-    robocopy $nodeModules (Join-Path $localRoot 'node_modules') /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "robocopy node_modules failed" }
+    robocopy $nodeModules (Join-Path $localRoot 'node_modules') /E /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
+    if ($LASTEXITCODE -ge 16) { throw "robocopy node_modules failed ($LASTEXITCODE)" }
 }
 
 Push-Location $localRoot
@@ -54,14 +57,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "electron-builder failed" }
 } finally { Pop-Location }
 
-$distSrc = Join-Path $localRoot 'dist'
-if (-not (Test-Path -LiteralPath $distSrc)) { throw "local dist/ not produced" }
+$artifactSrc = Join-Path $localRoot 'windows\build'
+if (-not (Test-Path -LiteralPath $artifactSrc)) { throw "local windows/build not produced" }
 
-$distDest = Join-Path $ProjectDir 'dist'
-New-Item -ItemType Directory -Path $distDest -Force | Out-Null
-robocopy $distSrc $distDest /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
-if ($LASTEXITCODE -ge 8) {
-    Write-Warning "robocopy dist -> project failed; artifacts at $distSrc"
+$artifactDest = Join-Path $ProjectDir 'windows\build'
+New-Item -ItemType Directory -Path $artifactDest -Force | Out-Null
+robocopy $artifactSrc $artifactDest /E /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
+if ($LASTEXITCODE -ge 16) {
+    Write-Warning "robocopy build -> project failed; artifacts at $artifactSrc"
 } else {
-    Write-Host "  dist copied back to $distDest"
+    Write-Host "  build copied back to $artifactDest"
 }
+Remove-Item -LiteralPath $localRoot -Recurse -Force -ErrorAction SilentlyContinue
