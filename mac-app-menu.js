@@ -1,4 +1,6 @@
-const { app, Menu, dialog, shell } = require('electron');
+const { app, Menu, shell, BrowserWindow } = require('electron');
+const path = require('path');
+const fs = require('fs');
 const os = require('os');
 
 const INTRO_URL = 'https://apps.tomippe.jp/sftp-gen/';
@@ -19,6 +21,12 @@ const MENU_LABELS = {
         ok: 'OK',
         checkUpdatesBtn: 'アップデートを確認',
         openIntro: 'Webサイトを開く',
+        updateNotAvailable: '最新バージョンを使用しています。',
+        updateAvailable: 'バージョン {version} が利用可能です。ダウンロードを開始します。',
+        updateDownloaded: 'アップデートのダウンロードが完了しました。再起動すると適用されます。',
+        restartNow: '今すぐ再起動',
+        updateError: 'アップデートを確認できません: {error}',
+        updateDevMode: '開発モードではアップデート確認できません。',
         services: 'サービス',
         hide: 'SFTP Generator を隠す',
         hideOthers: 'ほかを隠す',
@@ -45,6 +53,12 @@ const MENU_LABELS = {
         ok: 'OK',
         checkUpdatesBtn: 'Check for Updates',
         openIntro: 'Open Website',
+        updateNotAvailable: 'You are using the latest version.',
+        updateAvailable: 'Version {version} is available. Downloading…',
+        updateDownloaded: 'The update has been downloaded. Restart to apply it.',
+        restartNow: 'Restart Now',
+        updateError: 'Could not check for updates: {error}',
+        updateDevMode: 'Update checks are not available in development mode.',
         services: 'Services',
         hide: 'Hide SFTP Generator',
         hideOthers: 'Hide Others',
@@ -71,6 +85,12 @@ const MENU_LABELS = {
         ok: 'OK',
         checkUpdatesBtn: '检查更新',
         openIntro: '打开网站',
+        updateNotAvailable: '您使用的是最新版本。',
+        updateAvailable: '版本 {version} 可用。正在下载…',
+        updateDownloaded: '更新已下载。重启后生效。',
+        restartNow: '立即重启',
+        updateError: '无法检查更新: {error}',
+        updateDevMode: '开发模式下无法检查更新。',
         services: '服务',
         hide: '隐藏 SFTP Generator',
         hideOthers: '隐藏其他',
@@ -89,6 +109,8 @@ const MENU_LABELS = {
     }
 };
 
+let aboutWindow = null;
+
 function menuLocale() {
     const locale = app.getLocale();
     if (MENU_LABELS[locale]) return locale;
@@ -101,6 +123,25 @@ function menuLocale() {
 function t(key) {
     const labels = MENU_LABELS[menuLocale()] || MENU_LABELS.en;
     return labels[key] || MENU_LABELS.en[key];
+}
+
+function getAppRoot() {
+    return app.isPackaged
+        ? path.join(process.resourcesPath, 'app')
+        : __dirname;
+}
+
+function getAppsLogoPath() {
+    const candidates = [
+        path.join(getAppRoot(), 'windows', 'resources', 'AppsLogo.png'),
+        path.join(getAppRoot(), 'mac', 'AppsLogo.png'),
+        path.join(getAppRoot(), 'AppsLogo.png'),
+        path.join(__dirname, '..', 'build-common', 'Resources', 'AppsLogo.png')
+    ];
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) return candidate;
+    }
+    return null;
 }
 
 function macOSDescription() {
@@ -140,29 +181,55 @@ function feedbackURL() {
     return `${base}?${params.toString()}`;
 }
 
-function showAbout(mainWindow, checkForUpdates) {
+function buildAboutDetail() {
     const version = app.getVersion();
     const build = app.getBuild?.() || process.env.npm_package_version || version;
-    const detail = [
+    return [
         t('versionLine').replace('{version}', version),
         build !== version ? t('buildLine').replace('{build}', build) : null,
         '',
         t('copyright')
     ].filter(Boolean).join('\n');
+}
 
-    dialog.showMessageBox(mainWindow || undefined, {
-        type: 'info',
+function closeAboutWindow() {
+    if (aboutWindow && !aboutWindow.isDestroyed()) {
+        aboutWindow.close();
+    }
+}
+
+function showAbout(mainWindow) {
+    if (aboutWindow && !aboutWindow.isDestroyed()) {
+        aboutWindow.focus();
+        return;
+    }
+
+    aboutWindow = new BrowserWindow({
+        width: 360,
+        height: 300,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        fullscreenable: false,
+        show: false,
         title: 'SFTP Generator',
-        message: 'SFTP Generator',
-        detail,
-        buttons: [t('ok'), t('checkUpdatesBtn'), t('openIntro')],
-        defaultId: 0,
-        cancelId: 0,
-        noLink: true
-    }).then(({ response }) => {
-        if (response === 1) checkForUpdates();
-        if (response === 2) shell.openExternal(INTRO_URL);
-    }).catch(() => {});
+        parent: mainWindow || undefined,
+        modal: Boolean(mainWindow),
+        autoHideMenuBar: true,
+        webPreferences: {
+            preload: path.join(getAppRoot(), 'about-preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: false
+        }
+    });
+
+    aboutWindow.setMenu(null);
+    aboutWindow.loadFile(path.join(getAppRoot(), 'about.html'));
+    aboutWindow.once('ready-to-show', () => aboutWindow.show());
+    aboutWindow.on('closed', () => {
+        aboutWindow = null;
+    });
 }
 
 function setupApplicationMenu({ getMainWindow, checkForUpdates }) {
@@ -173,7 +240,7 @@ function setupApplicationMenu({ getMainWindow, checkForUpdates }) {
         submenu: [
             {
                 label: t('about'),
-                click: () => showAbout(getMainWindow(), checkForUpdates)
+                click: () => showAbout(getMainWindow())
             },
             { type: 'separator' },
             {
@@ -218,6 +285,9 @@ function setupApplicationMenu({ getMainWindow, checkForUpdates }) {
 module.exports = {
     setupApplicationMenu,
     showAbout,
+    closeAboutWindow,
+    getAppsLogoPath,
+    buildAboutDetail,
     t,
     feedbackURL,
     INTRO_URL

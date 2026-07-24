@@ -5,7 +5,7 @@ const fs = require('fs');
 const { exec, spawn } = require('child_process');
 const xml2js = require('xml2js');
 const { shell } = require('electron');
-const { setupApplicationMenu } = require('./mac-app-menu');
+const { setupApplicationMenu, closeAboutWindow, getAppsLogoPath, buildAboutDetail, t, INTRO_URL } = require('./mac-app-menu');
 const { setupWindowsApplicationMenu } = require('./win-app-menu');
 
 console.log('Application starting...');
@@ -16,6 +16,7 @@ let mainWindow = null;
 let defaultBasePath;
 let pendingSteOpenPayload = null;
 let pendingOpenFilePath = null;
+let manualUpdateCheck = false;
 
 const STE_PROG_ID = 'jp.tomippe.sftpgen.ste';
 
@@ -161,21 +162,97 @@ app.on('open-file', (event, filePath) => {
     }
 });
 
+function checkForUpdatesManual() {
+    if (!app.isPackaged) {
+        dialog.showMessageBox(mainWindow || undefined, {
+            type: 'info',
+            title: 'SFTP Generator',
+            message: t('updateDevMode'),
+            buttons: [t('ok')],
+            defaultId: 0
+        });
+        return;
+    }
+
+    manualUpdateCheck = true;
+    autoUpdater.checkForUpdates().catch((error) => {
+        manualUpdateCheck = false;
+        dialog.showErrorBox('SFTP Generator', t('updateError').replace('{error}', error.message));
+    });
+}
+
+const UPDATE_FEED_URL = 'https://apps.tomippe.jp/sftp-gen/';
+
+function setupAutoUpdaterFeedback() {
+    if (app.isPackaged) {
+        autoUpdater.setFeedURL({
+            provider: 'generic',
+            url: UPDATE_FEED_URL
+        });
+    }
+
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    autoUpdater.on('update-not-available', () => {
+        if (!manualUpdateCheck) return;
+        manualUpdateCheck = false;
+        dialog.showMessageBox(mainWindow || undefined, {
+            type: 'info',
+            title: 'SFTP Generator',
+            message: t('updateNotAvailable'),
+            buttons: [t('ok')],
+            defaultId: 0
+        });
+    });
+
+    autoUpdater.on('update-available', (info) => {
+        if (!manualUpdateCheck) return;
+        manualUpdateCheck = false;
+        dialog.showMessageBox(mainWindow || undefined, {
+            type: 'info',
+            title: 'SFTP Generator',
+            message: t('updateAvailable').replace('{version}', info.version),
+            buttons: [t('ok')],
+            defaultId: 0
+        });
+    });
+
+    autoUpdater.on('update-downloaded', () => {
+        dialog.showMessageBox(mainWindow || undefined, {
+            type: 'info',
+            title: 'SFTP Generator',
+            message: t('updateDownloaded'),
+            buttons: [t('ok'), t('restartNow')],
+            defaultId: 1
+        }).then(({ response }) => {
+            if (response === 1) {
+                autoUpdater.quitAndInstall();
+            }
+        });
+    });
+
+    autoUpdater.on('error', (error) => {
+        console.error('Auto-update error:', error);
+        if (!manualUpdateCheck) return;
+        manualUpdateCheck = false;
+        dialog.showErrorBox('SFTP Generator', t('updateError').replace('{error}', error.message));
+    });
+}
+
 app.whenReady().then(() => {
     registerWindowsSteAssociation();
 
-    autoUpdater.autoDownload = true;
-    autoUpdater.on('error', (error) => {
-        console.error('Auto-update error:', error);
-    });
+    if (process.platform !== 'win32') {
+        setupAutoUpdaterFeedback();
+    }
 
     setupApplicationMenu({
         getMainWindow: () => mainWindow,
-        checkForUpdates: () => autoUpdater.checkForUpdatesAndNotify()
+        checkForUpdates: () => checkForUpdatesManual()
     });
     setupWindowsApplicationMenu({
-        getMainWindow: () => mainWindow,
-        checkForUpdates: () => autoUpdater.checkForUpdatesAndNotify()
+        getMainWindow: () => mainWindow
     });
 
     createWindow();
@@ -190,7 +267,11 @@ app.whenReady().then(() => {
         openSteAtPath(steFromArgv);
     }
 
-    autoUpdater.checkForUpdatesAndNotify();
+    if (process.platform !== 'win32') {
+        autoUpdater.checkForUpdates().catch((error) => {
+            console.error('Startup update check failed:', error);
+        });
+    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -577,4 +658,32 @@ ipcMain.handle('take-pending-ste-open', () => {
     const payload = pendingSteOpenPayload;
     pendingSteOpenPayload = null;
     return payload;
+});
+
+ipcMain.handle('about-info', () => {
+    const logoPath = getAppsLogoPath();
+    const showUpdateCheck = process.platform !== 'win32';
+    return {
+        appName: 'SFTP Generator',
+        detail: buildAboutDetail(),
+        logoUrl: logoPath ? `file://${logoPath}` : '',
+        showUpdateCheck,
+        labels: {
+            ok: t('ok'),
+            checkUpdatesBtn: t('checkUpdatesBtn'),
+            openIntro: t('openIntro')
+        }
+    };
+});
+
+ipcMain.handle('check-for-updates', () => {
+    checkForUpdatesManual();
+});
+
+ipcMain.handle('open-intro-url', () => {
+    shell.openExternal(INTRO_URL);
+});
+
+ipcMain.handle('close-about-window', () => {
+    closeAboutWindow();
 }); 

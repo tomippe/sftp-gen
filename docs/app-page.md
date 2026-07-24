@@ -35,8 +35,8 @@ Mac ダウンロードボタンの URL は WordPress の **app-macpkg** と FTP 
 | ファイル | 用途 |
 |----------|------|
 | `sftp-gen_mac.dmg` | Mac 直接配布 |
-| `latest-mac.yml` | electron-updater |
-| `appcast.xml` | Sparkle 互換フィード |
+| `latest-mac.yml` | electron-updater（アプリ内の更新確認） |
+| `appcast.xml` | Sparkle 互換フィード（外部ツール用。アプリ本体は electron-updater） |
 | `manifest.json` | 紹介ページの版表示・リンク組み立て |
 | `sftp-gen_win.zip` | Windows ポータブル（Store 併用時は winurl 優先） |
 

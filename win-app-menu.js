@@ -2,10 +2,9 @@ const { Menu, shell } = require('electron');
 const { t, showAbout, feedbackURL, INTRO_URL } = require('./mac-app-menu');
 
 /**
- * Windows 向けアプリケーションメニュー。
- * Mac 版と同じ意図: について / フィードバック / 更新確認 / Web サイト、編集ショートカット、終了。
+ * Windows 向けアプリケーションメニュー（Store 配布 — 更新確認なし）。
  */
-function setupWindowsApplicationMenu({ getMainWindow, checkForUpdates }) {
+function setupWindowsApplicationMenu({ getMainWindow }) {
     if (process.platform !== 'win32') return;
 
     const template = [{
@@ -30,15 +29,11 @@ function setupWindowsApplicationMenu({ getMainWindow, checkForUpdates }) {
         submenu: [
             {
                 label: t('about'),
-                click: () => showAbout(getMainWindow(), checkForUpdates)
+                click: () => showAbout(getMainWindow())
             },
             {
                 label: t('feedback'),
                 click: () => { shell.openExternal(feedbackURL()); }
-            },
-            {
-                label: t('checkUpdates'),
-                click: () => { checkForUpdates(); }
             },
             { type: 'separator' },
             {

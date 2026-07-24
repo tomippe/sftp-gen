@@ -11,6 +11,7 @@ sftp.json
 windows/publish/*.appxbundle
 windows/publish/*.exe
 windows/dist/
+windows/work/
 .!*!package.json
 mac/Sparkle.framework/
 mac/Sparkle_bin/

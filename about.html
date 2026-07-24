@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file:; style-src 'unsafe-inline'; script-src 'self'">
+    <title>SFTP Generator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px 20px 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+            color: #1d1d1f;
+            background: #ececec;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .logo {
+            height: 34px;
+            cursor: pointer;
+        }
+        .app-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0 0 8px;
+            text-align: left;
+        }
+        .detail {
+            margin: 0;
+            white-space: pre-line;
+            color: #1d1d1f;
+            text-align: left;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 18px;
+        }
+        button {
+            width: 100%;
+            min-height: 28px;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            border-radius: 6px;
+            background: linear-gradient(#ffffff, #f2f2f2);
+            font: inherit;
+            cursor: default;
+        }
+        button.primary {
+            border-color: #0a84ff;
+            background: linear-gradient(#4da3ff, #0a84ff);
+            color: #fff;
+        }
+        button:active {
+            filter: brightness(0.96);
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-wrap">
+        <img id="logo" class="logo" alt="Studio Tomippe APPS" src="">
+    </div>
+    <p id="appName" class="app-name">SFTP Generator</p>
+    <p id="detail" class="detail"></p>
+    <div class="buttons">
+        <button id="updateBtn" type="button"></button>
+        <button id="introBtn" type="button"></button>
+        <button id="okBtn" class="primary" type="button"></button>
+    </div>
+    <script>
+        (async () => {
+            const info = await window.aboutAPI.getInfo();
+            document.getElementById('logo').src = info.logoUrl;
+            document.getElementById('appName').textContent = info.appName;
+            document.getElementById('detail').textContent = info.detail;
+            document.getElementById('introBtn').textContent = info.labels.openIntro;
+            document.getElementById('okBtn').textContent = info.labels.ok;
+            document.getElementById('logo').addEventListener('click', () => window.aboutAPI.openIntro());
+            if (info.showUpdateCheck) {
+                document.getElementById('updateBtn').textContent = info.labels.checkUpdatesBtn;
+                document.getElementById('updateBtn').addEventListener('click', () => window.aboutAPI.checkUpdates());
+            } else {
+                document.getElementById('updateBtn').hidden = true;
+            }
+            document.getElementById('introBtn').addEventListener('click', () => window.aboutAPI.openIntro());
+            document.getElementById('okBtn').addEventListener('click', () => window.aboutAPI.close());
+        })();
+    </script>
+</body>
+</html>
