@@ -201,6 +201,23 @@ with open(path, 'w', encoding='utf-8', newline='\\n') as f: json.dump(data, f)
 
 ftp_upload_dir "$DIST_DIR" "$MAC_DIST_SLUG"
 
+if [ -f ".env" ] && grep -q '^WP_APP_POST_ID=' .env 2>/dev/null; then
+    echo ""
+    echo "📄 紹介ページの Mac ダウンロード設定を同期中..."
+    # shellcheck disable=SC1091
+    [ -f "$HOME/.wp-env" ] && source "$HOME/.wp-env"
+    # shellcheck disable=SC1091
+    source .env
+    if [ -n "${WP_APP_POST_ID:-}" ] && [ -n "${WP_USER:-}" ] && [ -n "${WP_APP_PASSWORD:-}" ] && [ -n "${WP_SITE_URL:-}" ] && [ -n "${WP_APP_POST_TYPE:-}" ]; then
+        curl -s -X POST -u "$WP_USER:$WP_APP_PASSWORD" \
+            -H "Content-Type: application/json" \
+            -d '{"acf":{"app-macpkg":"dmg","app-macdesc":"macOS 10.15+, DMG<br>日本語,English,中文"}}' \
+            "$WP_SITE_URL/wp-json/wp/v2/$WP_APP_POST_TYPE/$WP_APP_POST_ID" >/dev/null \
+            && echo "  ✓ app-macpkg=dmg, app-macdesc を更新" \
+            || echo "  ⚠️  紹介ページ ACF の更新に失敗"
+    fi
+fi
+
 if ! $NO_VERUP; then
     echo ""
     echo "📝 次回用バージョンを更新しています..."

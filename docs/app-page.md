@@ -1,0 +1,61 @@
+# SFTP Generator 紹介ページ設定
+
+## 公開ステータス
+
+**公開済み**（`status: publish`）。
+
+## URL
+
+- 紹介ページ: https://apps.tomippe.jp/sftp-gen/
+- プライバシーポリシー: https://apps.tomippe.jp/sftp-gen/policy/
+
+## WordPress 投稿 ID
+
+| 用途 | ID |
+|------|-----|
+| 紹介ページ（app） | **1662** |
+
+## キャッチフレーズ（app-cp）
+
+VSCodeのSFTPプラグイン設定ツール
+FTP接続を気軽に始められます
+
+## プラットフォーム
+
+- **platform**: ["mac", "win"]
+- **app-macpkg**: **dmg**（直接配布のリンク先 `{slug}_mac.dmg`。未設定時は zip）
+- **app-macdesc**: `macOS 10.15+, DMG<br>日本語,English,中文`
+- **app-windesc**: `Windows 10+, Store<br>日本語,English,中文`（Store 公開後）
+- **app-winurl**: Microsoft Store の URL（Store 公開後）
+
+Mac ダウンロードボタンの URL は WordPress の **app-macpkg** と FTP 上の `manifest.json`（`mac_version`）から組み立てられる。DMG 配布に切り替えたら **app-macpkg を dmg に更新**すること（commandk-bar / disk-monitor と同様）。
+
+## 配布ファイル（FTP: apps/sftp-gen/）
+
+| ファイル | 用途 |
+|----------|------|
+| `sftp-gen_mac.dmg` | Mac 直接配布 |
+| `latest-mac.yml` | electron-updater |
+| `appcast.xml` | Sparkle 互換フィード |
+| `manifest.json` | 紹介ページの版表示・リンク組み立て |
+| `sftp-gen_win.zip` | Windows ポータブル（Store 併用時は winurl 優先） |
+
+## KV背景・キー色
+
+- **app-keycolor**: #7727bd
+- **app-kvbgaddcss**: screen ブレンド
+
+## ローカル連携
+
+- プロジェクト `.env`: `WP_APP_POST_ID`, `WP_APP_PAGE_URL`
+- REST API: `source ~/.wp-env && source .env` のあと curl で ACF 更新
+
+### Mac 配布形式を DMG に変更するとき
+
+```bash
+source ~/.wp-env && source .env
+curl -s -X POST -u "$WP_USER:$WP_APP_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"acf":{"app-macpkg":"dmg","app-macdesc":"macOS 10.15+, DMG<br>日本語,English,中文"}}' \
+  "$WP_SITE_URL/wp-json/wp/v2/$WP_APP_POST_TYPE/$WP_APP_POST_ID"
+```
