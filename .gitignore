@@ -8,6 +8,7 @@ out/
 sftp.json
 .env
 windows/build/*.appxbundle
+/SFTPGenerator.appxbundle
 windows/build/*.exe
 windows/build/
 windows/work/

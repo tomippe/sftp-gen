@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 function New-SftpgenWorkDirectory {
     param([Parameter(Mandatory = $true)][string]$Prefix)
@@ -70,6 +70,37 @@ function Expand-ArchiveLike {
     }
 }
 
+function Assert-AppxCustomTileAssets {
+    <#
+      electron-builder は buildResources/appx/ が無い（または空）だと黙って
+      ベンダーのサンプルタイル（winCodeSign/appxAssets/SampleAppx.*.png）を同梱する。
+      そのまま提出すると Store 認証 10.1.1.11「On Device Tiles（既定画像）」で不合格になる
+      ため、展開済み APPX のタイルが自前アセットと一致することをハッシュで検証する。
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$ExtractedAppxDir,
+        [Parameter(Mandatory = $true)][string]$ProjectRoot
+    )
+    $required = @('StoreLogo.png', 'Square44x44Logo.png', 'Square150x150Logo.png', 'Wide310x150Logo.png')
+    $customDir = Join-Path $ProjectRoot 'windows\resources\appx'
+    foreach ($name in $required) {
+        $expected = Join-Path $customDir $name
+        if (-not (Test-Path -LiteralPath $expected)) {
+            throw "Custom tile asset missing: $expected (run generate-appx-icons.ps1)"
+        }
+        $actual = Join-Path (Join-Path $ExtractedAppxDir 'assets') $name
+        if (-not (Test-Path -LiteralPath $actual)) {
+            throw "APPX asset missing after pack: assets\$name — electron-builder が windows\resources\appx を拾えていません"
+        }
+        $expectedHash = (Get-FileHash -LiteralPath $expected -Algorithm SHA256).Hash
+        $actualHash = (Get-FileHash -LiteralPath $actual -Algorithm SHA256).Hash
+        if ($expectedHash -ne $actualHash) {
+            throw "APPX asset assets\$name が自前タイルと不一致です（electron-builder のサンプル画像が混入した可能性。windows\resources\appx の配置を確認）"
+        }
+    }
+    Write-Host '  Tile assets verified (custom icons in package)'
+}
+
 function Get-SftpgenIdentityVersion {
     param([Parameter(Mandatory = $true)][string]$VersionFile)
     if (-not (Test-Path -LiteralPath $VersionFile)) {
@@ -114,27 +145,20 @@ function Set-AppxManifestDependencies {
     }
 }
 
-function Set-AppxManifestAllowExternalContent {
+function Remove-AppxManifestAllowExternalContent {
+    <#
+      uap10:AllowExternalContent は「外部ロケーション参照パッケージ（sparse package、
+      Add-AppxPackage -ExternalLocation で登録する非 Store 配布向け）」専用。
+      Store 提出パッケージに含めると Store 経由のインストールに失敗する
+      （認証 10.3.4「App Is Testable — failed to install through the Store」2026-08 実例）。
+      POUCHES の Store 提出フローにも含まれていない。混入していたら除去する。
+    #>
     param([string]$ManifestPath)
     $text = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8
-    if ($text -match 'uap10:AllowExternalContent\s*>\s*true') { return }
-    if ($text -notmatch 'xmlns:uap10=') {
-        $text = $text -replace '(<Package\b[^>]*)(>)', '$1 xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"$2'
-    }
-    if ($text -match 'IgnorableNamespaces="([^"]*)"') {
-        if ($Matches[1] -notmatch 'uap10') {
-            $text = $text -replace 'IgnorableNamespaces="([^"]*)"', 'IgnorableNamespaces="$1 uap10"'
-        }
-    } elseif ($text -match '<Package\b') {
-        $text = $text -replace '(<Package\b[^>]*)(>)', '$1 IgnorableNamespaces="uap10"$2'
-    }
-    if ($text -match '<Properties>') {
-        $text = $text -replace '<Properties>', "<Properties>`r`n    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>"
-    } else {
-        throw "Properties element not found in $ManifestPath"
-    }
-    [System.IO.File]::WriteAllText($ManifestPath, $text, [System.Text.UTF8Encoding]::new($false))
-    Write-Host "  AllowExternalContent=true (Electron unpack)"
+    if ($text -notmatch 'uap10:AllowExternalContent') { return }
+    $updated = [regex]::Replace($text, '\s*<uap10:AllowExternalContent>[^<]*</uap10:AllowExternalContent>', '')
+    [System.IO.File]::WriteAllText($ManifestPath, $updated, [System.Text.UTF8Encoding]::new($false))
+    Write-Host "  Removed uap10:AllowExternalContent (Store install blocker)"
 }
 
 function Test-ManifestHasSteFta {
@@ -161,8 +185,8 @@ function Set-AppxManifestDescriptions {
     if (-not $Description) { return }
     $text = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8
     $escaped = [System.Security.SecurityElement]::Escape($Description)
-    $updated = [regex]::Replace($text, '(<Description>)[^<]*(</Description>)', "`${1}$escaped`${2}")
-    $updated = [regex]::Replace($updated, '(<uap:VisualElements\b[^>]*\bDescription=")[^"]*(")', "`${1}$escaped`${2}")
+    $updated = [regex]::Replace($text, '(<Description>)[^<]*(</Description>)', "`${1}$escaped`${2}", [System.Text.RegularExpressions.RegexOptions]::Singleline)
+    $updated = [regex]::Replace($updated, '(<uap:VisualElements\b[\s\S]*?\bDescription=")[^"]*(")', "`${1}$escaped`${2}", [System.Text.RegularExpressions.RegexOptions]::Singleline)
     if ($updated -ne $text) {
         [System.IO.File]::WriteAllText($ManifestPath, $updated, [System.Text.UTF8Encoding]::new($false))
         Write-Host "  Normalized manifest descriptions"

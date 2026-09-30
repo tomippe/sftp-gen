@@ -63,8 +63,12 @@ if [ ! -f "mac/Sparkle.framework/Versions/B/Sparkle" ]; then
     fi
 fi
 
-# DMG 背景用ロゴ
-if [ ! -f "mac/AppsLogo.png" ] && [ -f "../build-common/Resources/AppsLogo.png" ]; then
+# バージョン情報は SVG。DMG 背景は PNG（SVG を描くとぼける）
+if [ -f "../build-common/Resources/AppsLogo.svg" ]; then
+    cp "../build-common/Resources/AppsLogo.svg" "mac/AppsLogo.svg"
+    cp "../build-common/Resources/AppsLogo.svg" "windows/resources/AppsLogo.svg"
+fi
+if [ -f "../build-common/Resources/AppsLogo.png" ]; then
     cp "../build-common/Resources/AppsLogo.png" "mac/AppsLogo.png"
 fi
 

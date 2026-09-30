@@ -15,12 +15,44 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+if ($env:TOMIPPE_BUILD_COMMON_ROOT -and (Test-Path -LiteralPath (Join-Path $env:TOMIPPE_BUILD_COMMON_ROOT 'windows-build-bootstrap.ps1'))) {
+    . (Join-Path $env:TOMIPPE_BUILD_COMMON_ROOT 'windows-build-bootstrap.ps1')
+} else {
+    . (Join-Path $PSScriptRoot '..\..\build-common\windows-build-bootstrap.ps1')
+}
+$buildCommonRoot = Resolve-BuildCommonRoot -WindowsScriptRoot $PSScriptRoot
+. (Join-Path $buildCommonRoot 'windows-unc-build.ps1')
+if ($env:TOMIPPE_WIN_BUILD_STAGED -ne '1') {
+    $projRootForStage = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+    if (Invoke-WindowsBuildViaLocalStageIfNeeded `
+            -ProjectRoot $projRootForStage `
+            -StageName 'sftp-gen-win-build' `
+            -ArtifactRelativePaths @('windows\build', 'windows\version.txt') `
+            -BuildScriptRelative 'windows\build-store.ps1' `
+            -BoundParameters $PSBoundParameters) {
+        # Yoink はドロップしたファイルをパス参照で保持するため、ステージ（%LOCALAPPDATA%）の
+        # 成果物を送るとビルド終了時のステージ削除で参照が切れる。コピーバック後の
+        # プロジェクト側（Mac 共有）のパスを送る
+        $signedDir = Join-Path $projRootForStage 'windows\build\signed'
+        if (Test-Path -LiteralPath $signedDir) {
+            $yoinkFiles = @(Get-ChildItem -LiteralPath $signedDir -File |
+                Where-Object { $_.Extension -in @('.appxbundle', '.msixbundle', '.csv', '.png') } |
+                ForEach-Object { $_.FullName })
+            if ($yoinkFiles.Count -gt 0) {
+                & (Join-Path $buildCommonRoot 'send-mspc-artifacts-to-yoink.ps1') -ArtifactPath $yoinkFiles
+                if ($LASTEXITCODE -ne 0) { Write-Host 'WARN: Yoink send failed (artifacts remain on disk)' -ForegroundColor Yellow }
+            }
+        }
+        exit 0
+    }
+}
+
 $rootDir = Resolve-Path (Join-Path $PSScriptRoot '..')
 $scriptsDir = Join-Path $PSScriptRoot 'scripts'
 $versionFile = Join-Path $PSScriptRoot 'version.txt'
 
-. (Join-Path $rootDir '..\build-common\helpers.ps1')
-. (Join-Path $rootDir '..\build-common\version.ps1')
+. (Join-Path $buildCommonRoot 'helpers.ps1')
+. (Join-Path $buildCommonRoot 'version.ps1')
 . (Join-Path $scriptsDir '_msstore-env.ps1')
 
 Write-Step 'Version'
@@ -95,15 +127,45 @@ Sign-StorePackage -PackagePath $bundlePath
 
 Write-Step 'Listing CSV'
 $listingScript = Join-Path $scriptsDir 'generate-listing-csv.py'
-$outCsv = Join-Path $rootDir 'windows\build\listingData.csv'
+$outCsv = Join-Path $rootDir 'windows\build\signed\listingData.csv'
 if (Test-Path $listingScript) {
     $metaPath = Join-Path $rootDir 'docs\store-metadata.md'
     $templatePath = Join-Path $scriptsDir 'listing-csv-template.csv'
     if ($env:MS_STORE_PRODUCT_ID) {
-        $outCsv = Join-Path $rootDir "windows\build\listingData-$($env:MS_STORE_PRODUCT_ID).csv"
+        $outCsv = Join-Path $rootDir "windows\build\signed\listingData-$($env:MS_STORE_PRODUCT_ID).csv"
     }
     python $listingScript --metadata $metaPath --template $templatePath -o $outCsv
-    if ($LASTEXITCODE -eq 0) { Write-Ok $outCsv }
+    if ($LASTEXITCODE -ne 0) { throw 'generate-listing-csv.py failed' }
+    Write-Ok $outCsv
+}
+
+# CSV が相対パスで参照する掲載画像（スクショ・ロゴ）を CSV と同じフォルダに置く
+# （Partner Center のインポートは CSV と画像をまとめて受け取る）
+$listingAssetsDir = Join-Path $rootDir 'windows\resources\listing'
+$listingAssets = @()
+if (Test-Path -LiteralPath $listingAssetsDir) {
+    foreach ($img in Get-ChildItem -LiteralPath $listingAssetsDir -Filter '*.png' -File) {
+        $dest = Join-Path (Split-Path -Parent $outCsv) $img.Name
+        Copy-Item -LiteralPath $img.FullName -Destination $dest -Force
+        $listingAssets += $dest
+    }
+    Write-Ok "Listing images: $($listingAssets.Count) file(s)"
+}
+
+Write-Step 'Yoink (Partner Center submit artifacts)'
+if ($env:TOMIPPE_WIN_BUILD_STAGED -eq '1') {
+    # ステージ実行中。成果物をコピーバックした後、呼び出し元がプロジェクト側のパスを送る
+    Write-Ok 'ステージ実行のため送信はコピーバック後に行う'
+} else {
+    $sendYoink = Join-Path $buildCommonRoot 'send-mspc-artifacts-to-yoink.ps1'
+    $yoinkArtifacts = @()
+    if ($bundlePath -and (Test-Path -LiteralPath $bundlePath)) { $yoinkArtifacts += $bundlePath }
+    if ($outCsv -and (Test-Path -LiteralPath $outCsv)) { $yoinkArtifacts += $outCsv }
+    $yoinkArtifacts += @($listingAssets | Where-Object { Test-Path -LiteralPath $_ })
+    if ($yoinkArtifacts.Count -gt 0) {
+        & $sendYoink -ArtifactPath $yoinkArtifacts
+        if ($LASTEXITCODE -ne 0) { Write-Warn 'Yoink send failed (artifacts remain on disk)' }
+    }
 }
 
 if (-not $Noverup) {

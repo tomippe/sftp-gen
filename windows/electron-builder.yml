@@ -1,9 +1,34 @@
 # Windows 専用 electron-builder 設定（Mac 用 `mac/` フォルダは使わない）
 # .ste FTA は patch-appx-store.ps1 で uap3 注入（electron-builder の fileAssociations は makeappx 失敗の原因）
 fileAssociations: []
+# package.json の build と同じく asar 無効（--config 時は package.json の設定が無効になるため明示）。
+# asar 化すると main.js getAppPath() が指す resources/app/index.html が存在せずウィンドウが真っ白になる（2026-08 実例）
+asar: false
 directories:
   buildResources: windows/resources
   output: windows/build
+# package.json の build.files と同じ「必要なものだけ」の許可リスト。
+# 除外指定だけにするとプロジェクト全体（.env / .cursor / docs / build スクリプト /
+# _build-common / テスト用 .ste など）が Store パッケージに同梱される（2026-08 実例）
+files:
+  - main.js
+  - mac-app-menu.js
+  - win-app-menu.js
+  - preload.js
+  - index.html
+  - renderer.js
+  - styles.css
+  - package.json
+  - locales/**/*
+  - about.html
+  - about.js
+  - about-preload.js
+  # バージョン情報ダイアログのロゴ。windows/resources は buildResources のため
+  # electron-builder が app から除外することがあり、mac/ 側も候補として同梱する
+  - windows/resources/AppsLogo.svg
+  - mac/AppsLogo.svg
+  - windows/resources/AppsLogo.png
+  - mac/AppsLogo.png
 win:
   target:
     - target: appx

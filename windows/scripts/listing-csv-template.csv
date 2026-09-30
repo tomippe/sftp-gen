@@ -1,7 +1,7 @@
 ﻿Field,ID,Type (Type),default,ja-jp,en-us,zh-cn
 Description,2,Text,,,,
 ReleaseNotes,3,Text,,,,
-Title,4,Text,,POUCHES,POUCHES,POUCHES
+Title,4,Text,,,,
 ShortTitle,5,Text,,,,
 SortTitle,6,Text,,,,
 VoiceTitle,7,Text,,,,
@@ -9,10 +9,10 @@ ShortDescription,8,Text,,,,
 DevStudio,9,Text,,,,
 CopyrightTrademarkInformation,12,Text,,,,
 AdditionalLicenseTerms,13,Text,,,,
-DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700021447319/listingassets/3035676127403221906,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700025580970/listingassets/3065914286700620598,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700025580972/listingassets/3004237367823294712
-DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700021447319/listingassets/3023507843275080571,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700025580970/listingassets/3042653892514687754,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700025580972/listingassets/3040203732424804734
-DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700021447319/listingassets/3011258197910679786,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700025580970/listingassets/3018025174439776676,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700025580972/listingassets/3009155257848987983
-DesktopScreenshot4,103,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PNS58D6L6ZD/submissions/1152921505701440983/listings/1152922700021447319/listingassets/3063104991095429905,,
+DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,screenshot1.png,screenshot1.png,screenshot1.png
+DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,,,
+DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,,,
+DesktopScreenshot4,103,Relative path (or URL to file in Partner Center),,,,
 DesktopScreenshot5,104,Relative path (or URL to file in Partner Center),,,,
 DesktopScreenshot6,105,Relative path (or URL to file in Partner Center),,,,
 DesktopScreenshot7,106,Relative path (or URL to file in Partner Center),,,,
@@ -291,7 +291,7 @@ SurfaceHubScreenshotCaption29,578,Text,,,,
 SurfaceHubScreenshotCaption30,579,Text,,,,
 StoreLogo720x1080,600,Relative path (or URL to file in Partner Center),,,,
 StoreLogo1080x1080,601,Relative path (or URL to file in Partner Center),,,,
-StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,,,
+StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,logo300.png,logo300.png,logo300.png
 OverrideLogosForWin10,603,True/False,,False,False,False
 StoreLogoOverride150x150,604,Relative path (or URL to file in Partner Center),,,,
 StoreLogoOverride71x71,605,Relative path (or URL to file in Partner Center),,,,

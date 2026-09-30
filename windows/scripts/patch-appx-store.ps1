@@ -46,15 +46,21 @@ try {
     Write-Host "Expand: $InputAppx"
     Expand-ArchiveLike -ArchivePath $InputAppx -Destination $extractDir
 
+    Assert-AppxCustomTileAssets -ExtractedAppxDir $extractDir -ProjectRoot $projectRoot
+
     $manifests = @(Get-ChildItem -LiteralPath $extractDir -Recurse -Filter 'AppxManifest.xml' -File)
     if ($manifests.Count -eq 0) { throw "AppxManifest.xml not found in $InputAppx" }
 
     foreach ($m in $manifests) {
         Set-AppxManifestVersion -ManifestPath $m.FullName -Version $identityVersion
         Set-AppxManifestDependencies -ManifestPath $m.FullName
-        Set-AppxManifestAllowExternalContent -ManifestPath $m.FullName
+        Remove-AppxManifestAllowExternalContent -ManifestPath $m.FullName
         Set-AppxManifestDescriptions -ManifestPath $m.FullName -Description $packageDescription
         Inject-SteFta -ManifestPath $m.FullName
+        $patchedText = Get-Content -LiteralPath $m.FullName -Raw -Encoding UTF8
+        if ($patchedText -match 'AllowExternalContent') {
+            throw "Store submission manifest must not contain AllowExternalContent: $($m.FullName)"
+        }
     }
 
     $outAppx = Join-Path $work 'patched.appx'

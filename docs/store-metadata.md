@@ -46,11 +46,11 @@ Studio Tomippe
 
 Store URL
 
-https://apps.microsoft.com/detail/{MS_STORE_PRODUCT_ID}
+https://apps.microsoft.com/detail/9NVBFLCQ74N4?hl=ja-JP&gl=JP
 
 Store ID
 
-（Partner Center でアプリ作成後に .env の MS_STORE_PRODUCT_ID を設定）
+9NVBFLCQ74N4（`.env` の `MS_STORE_PRODUCT_ID`）
 
 Identity Version の第 4 桁は常に 0（例: windows/version.txt が 1.3.0 なら 1.3.0.0）
 
@@ -60,7 +60,7 @@ windows/build/signed/SFTPGenerator.appxbundle
 
 Partner Center リスト CSV（generate-listing-csv.py 生成）
 
-windows/build/listingData-*.csv
+windows/build/signed/listingData-*.csv
 
 ---
 
@@ -196,10 +196,11 @@ Privacy policy: https://apps.tomippe.jp/sftp-gen/policy/
 ## 申請前チェックリスト
 
 - [ ] Partner Center で Package Identity Name `StudioTomippe.SFTPGenerator` を予約済み
-- [ ] `.env` に MS_STORE_PRODUCT_ID を設定
+- [x] `.env` に MS_STORE_PRODUCT_ID を設定（9NVBFLCQ74N4）
 - [ ] windows/version.txt / APPX Identity Version（X.Y.Z.0）一致
 - [ ] `windows/build/signed/SFTPGenerator.appxbundle` を提出
-- [ ] `windows/build/listingData-*.csv` または本ファイルの文言を Partner Center に反映
-- [ ] プライバシーポリシー URL を Partner Center と apps.tomippe.jp に設定
+- [ ] `windows/build/signed/listingData-*.csv` または本ファイルの文言を Partner Center に反映
+- [x] プライバシーポリシー URL を Partner Center と apps.tomippe.jp に設定
+- [ ] Store 承認後: 紹介ページを Store ボタンへ（app-winurl / app-windesc）＋ FTP の `sftp-gen_win.zip` を削除
 - [ ] runFullTrust を申告（理由は上記英語文）
 - [ ] .ste ダブルクリック動作を実機確認

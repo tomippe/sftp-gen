@@ -41,7 +41,7 @@ const MENU_LABELS = {
         selectAll: 'すべてを選択',
         versionLine: 'バージョン {version}',
         buildLine: 'ビルド {build}',
-        copyright: 'Copyright © tomippe. All rights reserved.'
+        copyright: 'Copyright © Studio Tomippe. All rights reserved.'
     },
     en: {
         about: 'About SFTP Generator',
@@ -73,7 +73,7 @@ const MENU_LABELS = {
         selectAll: 'Select All',
         versionLine: 'Version {version}',
         buildLine: 'Build {build}',
-        copyright: 'Copyright © tomippe. All rights reserved.'
+        copyright: 'Copyright © Studio Tomippe. All rights reserved.'
     },
     'zh-Hans': {
         about: '关于 SFTP Generator',
@@ -105,7 +105,7 @@ const MENU_LABELS = {
         selectAll: '全选',
         versionLine: '版本 {version}',
         buildLine: '构建 {build}',
-        copyright: 'Copyright © tomippe. All rights reserved.'
+        copyright: 'Copyright © Studio Tomippe. All rights reserved.'
     }
 };
 
@@ -133,6 +133,10 @@ function getAppRoot() {
 
 function getAppsLogoPath() {
     const candidates = [
+        path.join(getAppRoot(), 'windows', 'resources', 'AppsLogo.svg'),
+        path.join(getAppRoot(), 'mac', 'AppsLogo.svg'),
+        path.join(getAppRoot(), 'AppsLogo.svg'),
+        path.join(__dirname, '..', 'build-common', 'Resources', 'AppsLogo.svg'),
         path.join(getAppRoot(), 'windows', 'resources', 'AppsLogo.png'),
         path.join(getAppRoot(), 'mac', 'AppsLogo.png'),
         path.join(getAppRoot(), 'AppsLogo.png'),

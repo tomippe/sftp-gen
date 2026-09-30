@@ -77,9 +77,9 @@ Remove-FilesSafely -Directory $winBuild -Filters @('*.appx', '*.appxbundle')
 
 if ($Mode -eq 'All') {
     Remove-TreeSafely (Join-Path $winBuild 'signed')
-    $publish = Join-Path $projectRoot 'windows\build'
-    foreach ($name in @('SFTPGenerator.appxbundle', 'SFTP Generator.exe', 'listingData.csv')) {
-        $path = Join-Path $publish $name
+    Remove-FilesSafely -Directory $winBuild -Filters @('listingData*.csv')
+    foreach ($name in @('SFTPGenerator.appxbundle', 'SFTP Generator.exe')) {
+        $path = Join-Path $winBuild $name
         if (Test-Path -LiteralPath $path) {
             Remove-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
         }

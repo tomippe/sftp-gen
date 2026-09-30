@@ -25,8 +25,8 @@ function Import-MsStoreEnvFile {
 function Load-MsStoreEnv {
     param([string]$ProjectRoot = "")
 
-    Import-MsStoreEnvFile (Join-Path $env:USERPROFILE '.msstore-env')
     Import-MsStoreEnvFile 'Y:\.msstore-env'
+    Import-MsStoreEnvFile (Join-Path $env:USERPROFILE '.msstore-env')
     if ($ProjectRoot) {
         Import-MsStoreEnvFile (Join-Path $ProjectRoot '.env')
     }

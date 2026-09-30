@@ -4,7 +4,7 @@ Partner Center listing CSV を store-metadata.md から生成する。
 
 Usage:
   python scripts/generate-listing-csv.py
-  python scripts/generate-listing-csv.py -OutDir dist
+  python scripts/generate-listing-csv.py -o windows/build/signed/listingData.csv
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ WIN_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = WIN_DIR.parent
 DEFAULT_METADATA = PROJECT_ROOT / "docs" / "store-metadata.md"
 DEFAULT_TEMPLATE = WIN_DIR / "scripts" / "listing-csv-template.csv"
-DEFAULT_OUT = PROJECT_ROOT / "dist" / "listingData.csv"
+DEFAULT_OUT = WIN_DIR / "build" / "signed" / "listingData.csv"
 
 # store-metadata.md の見出し → CSV Field 名
 SECTION_KEYS = {
@@ -87,8 +87,9 @@ def parse_store_metadata(text: str) -> dict[str, dict[str, str | list[str]]]:
                     nxt = lines[i].strip()
                     if nxt in keys:
                         break
-                    # stop at next ##-level (shouldn't appear) or horizontal rule sections
-                    if lines[i].startswith("## "):
+                    # 次の見出し、または言語セクションを区切る水平線で打ち切る
+                    # （`---` を拾うと Feature に "---" が入り Partner Center に出る）
+                    if lines[i].startswith("## ") or re.fullmatch(r"[-*_]{3,}", nxt):
                         break
                     chunk.append(lines[i])
                     i += 1
@@ -133,10 +134,9 @@ def fill_csv(
         if field == "Title":
             for lang, col in (("ja", 4), ("en", 5), ("zh", 6)):
                 title = meta.get(lang, {}).get("Title")
-                if isinstance(title, str) and title:
-                    row[col] = title
-                else:
-                    row[col] = "POUCHES"
+                if not (isinstance(title, str) and title):
+                    raise SystemExit(f"ERROR: Title missing for {lang} in store-metadata.md")
+                row[col] = title
             continue
         if field in ("Description", "ReleaseNotes", "ShortDescription"):
             for lang, col in (("ja", 4), ("en", 5), ("zh", 6)):
@@ -182,8 +182,24 @@ def main() -> int:
         if not isinstance(desc, str) or not desc.strip():
             print(f"ERROR: missing Description for {lang} in {args.metadata}", file=sys.stderr)
             return 1
+        feats = d.get("Features") or []
+        if isinstance(feats, list):
+            for feat in feats:
+                if re.fullmatch(r"[-*_\s]{3,}", feat):
+                    print(f"ERROR: separator line parsed as feature ({lang}): {feat!r}", file=sys.stderr)
+                    return 1
 
     fill_csv(args.template, args.output, meta)
+
+    # 他アプリ（POUCHES 等）のアセット URL・文言の混入ガード。
+    # 過去にテンプレート経由で POUCHES のスクリーンショット URL が Partner Center に
+    # インポートされ、Store 掲載が別アプリのスクショになった（2026-08 実例）。
+    generated = args.output.read_text(encoding="utf-8-sig")
+    for banned in ("POUCHES", "9PNS58D6L6ZD", "developer.microsoft.com"):
+        if banned in generated:
+            print(f"ERROR: generated CSV contains foreign listing data: {banned!r}", file=sys.stderr)
+            return 1
+
     print(f"Listing CSV: {args.output}")
     for lang in ("ja", "en", "zh"):
         d = meta[lang]

@@ -1,6 +1,9 @@
 #Requires -Version 5.1
 <#
   windows/resources/icon.png から electron-builder APPX 用タイルを生成する。
+  electron-builder は buildResources/appx/ サブディレクトリだけをユーザーアセットとして
+  拾うため、出力先は必ず windows\resources\appx（直下に置くとベンダーの
+  サンプル画像にフォールバックし、Store 認証 10.1.1.11 で不合格になる）。
   Mac 用 mac/ フォルダは触らない。
 #>
 param(
@@ -18,7 +21,7 @@ if (-not (Test-Path -LiteralPath $SourcePng)) {
     throw "Icon not found: $SourcePng"
 }
 if (-not $OutDir) {
-    $OutDir = Join-Path $projectRoot 'windows\resources'
+    $OutDir = Join-Path $projectRoot 'windows\resources\appx'
 }
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 
